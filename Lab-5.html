@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>BB84</title>
+		<style>
+			* {
+				margin: 5px;
+				padding: 5px;
+				color: rgb(255, 255, 255);
+			}
+			body {
+				background-color: #2a2a2a;
+				display: flex;
+				flex-direction: column;
+				align-items: center;
+			}
+			button, input {
+				border: solid 1px;
+				border-radius: 5px;
+				box-shadow: none;
+				background-color: #333f41;
+				padding: 10px;
+			}
+			button:hover, input:hover {
+				background-color: #394b4e;
+				cursor: pointer;
+			}
+			table {
+				border-collapse: collapse;
+				width: 100%;
+			}
+			th, td {
+				border: 1px solid #333;
+				padding: 8px;
+				text-align: center;
+			}
+		</style>
+	</head>
+	<body>
+		<div>
+			<label for="targetLength">Key Length:</label>
+			<input type="number" id="targetLength" min="1" value="16" />
+			<button id="newRoundBtn">Send Bit</button>
+			<button id="resetBtn">Reset</button>
+		</div>
+		<p id="keyDisplay">Secret Key: </p>
+		<p id="finalMsg"></p>
+		<table>
+			<thead>
+				<tr>
+					<th>#</th>
+					<th>Alice Bit</th>
+					<th>Alice Base</th>
+					<th>Bob Base</th>
+					<th>Valid</th>
+				</tr>
+			</thead>
+			<tbody id="tableBody"></tbody>
+		</table>
+	</body>
+	<script>
+		const btnStart  = document.querySelector('#newRoundBtn');
+		const btnClear  = document.querySelector('#resetBtn');
+		const lenInput  = document.querySelector('#targetLength');
+		const outputKey = document.querySelector('#keyDisplay');
+		const statusMsg = document.querySelector('#finalMsg');
+		const logTable  = document.querySelector('#tableBody');
+
+		let stepCounter = 0;
+		let secret = '';
+
+		const coin = () => (Math.random() > 0.5 ? 1 : 0);
+		const direction = () => (Math.random() > 0.5 ? '↗' : '↕');
+
+		btnStart.addEventListener('click', () => {
+			const limit = parseInt(lenInput.value, 10) || 0;
+			if (secret.length >= limit) return;
+
+			stepCounter++;
+			const aBit = coin();
+			const aPol = direction();
+			const bPol = direction();
+			const valid = aPol === bPol;
+
+			if (valid) {
+				secret += aBit;
+			}
+
+			const entry = document.createElement('tr');
+			entry.innerHTML = `
+				<td>${stepCounter}</td>
+				<td>${aBit}</td>
+				<td>${aPol}</td>
+				<td>${bPol}</td>
+				<td>${valid ? 'Y' : 'N'}</td>
+			`;
+			entry.style.animation = 'fadeEntry 0.4s ease-out';
+			logTable.appendChild(entry);
+
+			outputKey.textContent = `Secret Key: ${secret}`;
+
+			if (secret.length >= limit) {
+				btnStart.disabled = true;
+				statusMsg.textContent = `Final key generated: [${secret.length}] bits)`;
+				statusMsg.classList.add('pulse');
+			}
+		});
+
+		btnClear.addEventListener('click', () => {
+			stepCounter = 0;
+			secret = '';
+			logTable.innerHTML = '';
+			outputKey.textContent = 'Secret Key: ';
+			statusMsg.textContent = '';
+			statusMsg.classList.remove('pulse');
+			btnStart.disabled = false;
+		});
+	</script>
+</html>
